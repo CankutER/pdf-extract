@@ -142,9 +142,12 @@ logs/
 
 # PDF and other generated documents
 *.pdf
+!sample-report.pdf
+!multi-column.pdf
 
 #txt documents
 *.txt
+!requirements.txt
 
 # Optional: ignore notebooks output (cell outputs can be large)
 **/.ipynb_checkpoints/

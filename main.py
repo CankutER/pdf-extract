@@ -7,7 +7,7 @@ from utils import is_capitalized_or_uppercase
 
 pprint= PrettyPrinter(width=200).pprint
 
-def extract_sections_with_images_multiline_headers(pdf_path: str):
+def extract_pdf(pdf_path: str):
 
     pages_dict = pymupdf4llm.to_markdown(
         pdf_path,
@@ -146,7 +146,7 @@ def extract_sections_with_images_multiline_headers(pdf_path: str):
     return sections
 
 
-sections=extract_sections_with_images_multiline_headers("sample-report.pdf")
+# sections=extract_pdf("multi-column.pdf")
 
-for section in sections:
-    pprint(section)
+# for section in sections:
+#     pprint(section)
