@@ -68,7 +68,7 @@ I have included two sample files in the repository for testing, they also have s
         "table_markdown": "table text separated by |,str",
         "page": "page number of the table,int" ,
         "label": "Naively detected label/annotation of the image,str"
-      },],
+      }],
       "pages": ["number of","pages this section","covers"]
     }
 ]
