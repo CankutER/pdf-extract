@@ -157,3 +157,11 @@ logs/
 .cache/
 data/
 tmp/
+
+# Extracted Images
+extracted_images/
+all_images.md
+extracted_images*
+
+# Output
+output.json

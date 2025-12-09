@@ -1,9 +1,11 @@
+import json
 import re
 import pymupdf4llm
 from pprint import PrettyPrinter
 from utils import scan_image_labels
 from utils import scan_table_labels
 from utils import is_capitalized_or_uppercase
+from extract_images_to_md import  save_images_to_md
 
 pprint= PrettyPrinter(width=200).pprint
 
@@ -146,7 +148,11 @@ def extract_pdf(pdf_path: str):
     return sections
 
 
-# sections=extract_pdf("multi-column.pdf")
+sections=extract_pdf("sample-report")
 
+save_images_to_md(sections=sections)
+
+with open("output.json", "w") as f:
+    f.write(json.dumps(sections))
 # for section in sections:
 #     pprint(section)
