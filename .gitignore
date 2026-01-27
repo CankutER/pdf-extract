@@ -144,6 +144,7 @@ logs/
 *.pdf
 !sample-report.pdf
 !multi-column.pdf
+output*
 
 #txt documents
 *.txt
