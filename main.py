@@ -1,3 +1,4 @@
+import pymupdf
 import json
 import re
 import pymupdf4llm
@@ -5,7 +6,9 @@ from pprint import PrettyPrinter
 from utils import scan_image_labels
 from utils import scan_table_labels
 from utils import is_capitalized_or_uppercase
-from extract_images_to_md import  save_images_to_md
+from extract_images_to_md import  save_images_to_md,ensure_dir
+import pymupdf
+import os
 
 pprint= PrettyPrinter(width=200).pprint
 
@@ -148,11 +151,33 @@ def extract_pdf(pdf_path: str):
     return sections
 
 
-sections=extract_pdf("sample-report")
+#sections=extract_pdf("sample-report")
 
-save_images_to_md(sections=sections)
+#save_images_to_md(sections=sections)
 
-with open("output.json", "w") as f:
-    f.write(json.dumps(sections))
+#with open("output.json", "w") as f:
+#    f.write(json.dumps(sections))
 # for section in sections:
 #     pprint(section)
+
+
+def extract_images(pdf_path, output_dir):
+    ensure_dir(output_dir)
+    doc=pymupdf.open(pdf_path)
+    pages_dict = pymupdf4llm.to_markdown(
+        doc,
+        page_chunks=True,
+        image_format="jpg",
+        write_images=True,
+        image_path=output_dir,
+        image_size_limit=0.1,
+        dpi=300
+    )
+    for page_index,page in enumerate(pages_dict):
+        tables=page.get("tables")
+        for table_index,table in enumerate(tables):
+            table_bbox=table.get("bbox")
+            docPage=doc[page_index]
+            docPage.get_pixmap(clip=table_bbox,dpi=300).save(f"{output_dir}/{os.path.basename(pdf_path)}_table_{page_index}_{table_index}.jpg")
+
+# extract_images("sample-report.pdf", "./training/1/images")
