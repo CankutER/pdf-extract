@@ -163,6 +163,8 @@ tmp/
 extracted_images/
 all_images.md
 extracted_images*
+images/
+training/
 
 # Output
 output.json
