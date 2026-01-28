@@ -228,7 +228,7 @@ def extract_assets_with_metadata(pdf_path, output_dir):
             line = lines[i].rstrip()
             # print("------------PRINTING SINGLE LINE------------")
             # print(line)
-            print(line_accumulator)
+            # print(line_accumulator)
 
             # Detect if line refers to image reference, like ![](./images/sample-report.pdf-3-0.jpg)
             pattern = re.compile(
@@ -242,11 +242,12 @@ def extract_assets_with_metadata(pdf_path, output_dir):
             if match:
                 full_path = match.group("path")
                 label_text = scan_image_labels(lines, i)
+                text_before = "\n".join(line_accumulator)
                 images_lib.append({
                     "label": label_text or "",
                     "path": full_path,
                     "page": page_index,
-                    "text_before": "\n".join(line_accumulator),
+                    "text_before": text_before or "\n".join(lines),
                     "type": "visual"
                 })
                 # print("Image path:", full_path)
@@ -273,7 +274,7 @@ def extract_assets_with_metadata(pdf_path, output_dir):
                         "label": table_label or "",
                         "path": table_path,
                         "page": page_index,
-                        "text_before": "\n".join(line_accumulator),
+                        "text_before": "\n".join(line_accumulator) or "\n".join(lines),
                         "type": "table"
                     })
                     line_accumulator = []
@@ -341,6 +342,6 @@ def process_visual_context(items, max_chars=750):
 
 
 images_lib = extract_assets_with_metadata(
-    "sample-report.pdf", "./training/1/images")
+    "networking-sample.pdf", "./training/2/images")
 with open("output.json", "w") as f:
     f.write(json.dumps(images_lib, default=str))
