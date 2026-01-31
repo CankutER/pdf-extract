@@ -1,6 +1,7 @@
 import shutil
 import logging
 from fastapi import FastAPI, File, HTTPException, UploadFile, Form, Request, Response
+from requests_toolbelt import MultipartEncoder
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from fastapi.responses import JSONResponse
 import shutil
@@ -9,8 +10,7 @@ import os
 import uuid
 import traceback
 import json
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
+import json
 from main import extract_pdf, extract_assets_with_metadata
 import asyncio
 from fastapi.concurrency import run_in_threadpool
@@ -159,52 +159,52 @@ async def extract_images_endpoint(request: Request):
                     os.remove(temp_pdf_path)
 
         # 5. Construct Multipart Response
-        msg = MIMEMultipart('mixed')
-
+        fields = {}
+        
         # Part 1: All Metadata Aggregated
         # We need a structure that maps assetId -> Metadata
         all_metadata = {
             aid: data["metadata"] for aid, data in processed_assets.items()
         }
-
-        metadata_part = MIMEBase('application', 'json')
-        metadata_part.set_payload(json.dumps(all_metadata))
-        metadata_part.add_header(
-            'Content-Disposition', 'form-data', name="metadata")
-        msg.attach(metadata_part)
+        # Add metadata field
+        fields['metadata'] = json.dumps(all_metadata)
 
         # Part 2+: Files
-        for aid, data in processed_assets.items():
-            for cid, file_path in data["files"]:
-                try:
-                    with open(file_path, "rb") as f:
-                        file_content = f.read()
-
-                    # Determine mime type (simple guess)
-                    mime_type = "application/octet-stream"
-                    if file_path.lower().endswith((".jpg", ".jpeg")):
-                        mime_type = "image/jpeg"
-                    elif file_path.lower().endswith(".png"):
-                        mime_type = "image/png"
-
-                    main_type, sub_type = mime_type.split('/', 1)
-                    image_part = MIMEBase(main_type, sub_type)
-                    image_part.set_payload(file_content)
-
-                    image_part.add_header(
-                        'Content-Transfer-Encoding', 'binary')
-                    # Content-ID is important for reference
-                    image_part.add_header('Content-ID', f"<{cid}>")
-                    # Also set filename in disposition
-                    image_part.add_header(
-                        'Content-Disposition', 'form-data', name=cid, filename=os.path.basename(file_path))
-
-                    msg.attach(image_part)
-                except Exception as e:
-                    logger.error(f"Failed to attach file {file_path}: {e}")
-
-        # 6. Return response
-        return Response(content=msg.as_bytes(), media_type=msg.get_content_type())
+        open_files = []
+        try:
+            for aid, data in processed_assets.items():
+                for cid, file_path in data["files"]:
+                    try:
+                        # Determine mime type (simple guess)
+                        mime_type = "application/octet-stream"
+                        if file_path.lower().endswith((".jpg", ".jpeg")):
+                            mime_type = "image/jpeg"
+                        elif file_path.lower().endswith(".png"):
+                            mime_type = "image/png"
+                        
+                        f_obj = open(file_path, "rb")
+                        open_files.append(f_obj)
+                        
+                        # MultipartEncoder field format: (filename, fileobj, content_type)
+                        # We use cid as the key (name) in the form
+                        fields[cid] = (os.path.basename(file_path), f_obj, mime_type)
+                    except Exception as e:
+                        logger.error(f"Failed to attach file {file_path}: {e}")
+            
+            # Create encoder
+            m = MultipartEncoder(fields=fields)
+            
+            # We must read the data before closing files
+            # Since we return a Response, wrapping it in m.to_string() loads in memory.
+            # Given we are sending images, this might be memory intensive but ok for now as per previous implementation.
+            content_data = m.to_string()
+            
+            return Response(content=content_data, media_type=m.content_type)
+            
+        finally:
+            # Close all opened file handles
+            for f in open_files:
+                f.close()
 
     except Exception as e:
         logger.critical(
