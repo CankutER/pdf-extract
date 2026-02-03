@@ -198,7 +198,8 @@ def extract_assets_with_metadata(pdf_path, output_dir):
         write_images=True,
         image_path=output_dir,
         image_size_limit=0.05,
-        dpi=300
+        dpi=300,
+        graphics_limit=0
     )
     # We trust table index here will match table detection order found while parsing lines
     table_counter = 0
@@ -341,7 +342,7 @@ def process_visual_context(items, max_chars=750):
     return items
 
 
-#images_lib = extract_assets_with_metadata(
-#    "networking-sample.pdf", "./training/2/images")
-#with open("output.json", "w") as f:
-#    f.write(json.dumps(images_lib, default=str))
+# images_lib = extract_assets_with_metadata(
+ #   "sample-report.pdf", "./training/2/images")
+# with open("output.json", "w") as f:
+ #   f.write(json.dumps(images_lib, default=str))
